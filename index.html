@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AquaTrack — Suivi d'hydratation</title>
+<style>
+  :root {
+    --bg: #F5F3EE;
+    --bg-panel: #FFFFFF;
+    --ink: #2B2822;
+    --ink-soft: #6B6558;
+    --accent: #C15F3C;
+    --accent-soft: #F0DDD2;
+    --line: #E4DFD3;
+    --success: #7A8B5C;
+    --radius: 16px;
+    --font-serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    padding: 32px 20px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  header.top h1 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+
+  .tab {
+    border: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* --- Panneau principal ------------------------------------------------ */
+
+  .hero {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 40px 28px 32px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .hero .label {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .hero .total {
+    font-family: var(--font-serif);
+    font-size: 64px;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .hero .total .unit {
+    font-size: 28px;
+    color: var(--ink-soft);
+    margin-left: 4px;
+  }
+
+  .hero .goal-line {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 12px;
+  }
+
+  .progress-track {
+    margin-top: 14px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 14px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+    font-family: var(--font-sans);
+  }
+
+  .btn:hover {
+    border-color: var(--accent);
+    background: #FCF9F5;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  .btn .icon {
+    font-size: 22px;
+  }
+
+  .btn .name {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .btn .amount {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* --- Historique du jour ------------------------------------------------ */
+
+  .today-log {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+
+  .today-log h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0 0 10px;
+  }
+
+  .entry-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .entry-row:last-child { border-bottom: none; }
+
+  .entry-row .time { color: var(--ink-soft); }
+
+  .entry-row .qty { font-weight: 600; }
+
+  .entry-row button {
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .entry-row button:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .empty-note {
+    color: var(--ink-soft);
+    font-size: 14px;
+    padding: 8px 0;
+  }
+
+  /* --- Stats -------------------------------------------------------------- */
+
+  .stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+
+  .stat-card .value {
+    font-family: var(--font-serif);
+    font-size: 26px;
+  }
+
+  .stat-card .label {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .chart-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .chart-panel h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 160px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 6px;
+  }
+
+  .bar {
+    width: 100%;
+    max-width: 28px;
+    background: var(--accent-soft);
+    border-radius: 6px 6px 2px 2px;
+    position: relative;
+    transition: height 0.3s ease;
+  }
+
+  .bar.hit-goal {
+    background: var(--accent);
+  }
+
+  .bar-col .day-label {
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+
+  .history-list {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+
+  .history-list h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 0 0 10px;
+  }
+
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+
+  .history-row:last-child { border-bottom: none; }
+
+  .history-row .date { color: var(--ink); }
+  .history-row .total { font-weight: 600; }
+  .history-row .total.hit { color: var(--success); }
+
+  /* --- Modale custom ------------------------------------------------------ */
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 40, 34, 0.35);
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--bg-panel);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 90%;
+    max-width: 320px;
+  }
+
+  .modal h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 18px;
+    margin: 0 0 16px;
+  }
+
+  .modal input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: var(--font-sans);
+    margin-bottom: 14px;
+  }
+
+  .modal input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg-panel);
+    font-size: 14px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+
+  .modal-actions button.confirm {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .goal-editor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  .goal-editor input {
+    width: 70px;
+    text-align: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  .goal-editor button {
+    border: none;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 400px) {
+    .hero .total { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <h1>💧 AquaTrack</h1>
+    <div class="tabs">
+      <button class="tab active" data-view="today">Aujourd'hui</button>
+      <button class="tab" data-view="stats">Statistiques</button>
+    </div>
+  </header>
+
+  <!-- Vue Aujourd'hui -->
+  <section id="view-today" class="view active">
+    <div class="hero">
+      <div class="label">Bu aujourd'hui</div>
+      <div class="total"><span id="total-value">0</span><span class="unit">L</span></div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="goal-line">Objectif : <span id="goal-value">2.0</span> L</div>
+      <div class="goal-editor">
+        <input type="number" id="goal-input" min="0.1" step="0.1" placeholder="2.0">
+        <button id="goal-save">Définir</button>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn" data-amount="200">
+        <span class="icon">🥃</span>
+        <span class="name">Un verre</span>
+        <span class="amount">+20 cl</span>
+      </button>
+      <button class="btn" data-amount="500">
+        <span class="icon">🍶</span>
+        <span class="name">Petite bouteille</span>
+        <span class="amount">+50 cl</span>
+      </button>
+      <button class="btn" data-amount="1000">
+        <span class="icon">🫙</span>
+        <span class="name">Un litre</span>
+        <span class="amount">+1 L</span>
+      </button>
+      <button class="btn" id="btn-custom">
+        <span class="icon">✏️</span>
+        <span class="name">Custom</span>
+        <span class="amount">Quantité libre</span>
+      </button>
+    </div>
+
+    <div class="today-log">
+      <h2>Historique du jour</h2>
+      <div id="today-entries"></div>
+    </div>
+  </section>
+
+  <!-- Vue Statistiques -->
+  <section id="view-stats" class="view">
+    <div class="stats-summary">
+      <div class="stat-card">
+        <div class="value" id="stat-avg">0 L</div>
+        <div class="label">Moyenne / jour</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="stat-streak">0</div>
+        <div class="label">Jours d'objectif atteint</div>
+      </div>
+    </div>
+
+    <div class="chart-panel">
+      <h2>7 derniers jours</h2>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="history-list">
+      <h2>Historique complet</h2>
+      <div id="history-rows"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Modale custom -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h3>Quantité personnalisée</h3>
+    <input type="number" id="custom-input" placeholder="Quantité en cl" min="1">
+    <div class="modal-actions">
+      <button id="custom-cancel">Annuler</button>
+      <button class="confirm" id="custom-confirm">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = {
+  data: '/api/data',
+  add: '/api/add',
+  del: '/api/delete',
+  stats: '/api/stats',
+  goal: '/api/goal',
+};
+
+let state = { entries: [], goal_ml: 2000 };
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function formatL(ml) {
+  return (ml / 1000).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+}
+
+async function fetchData() {
+  const res = await fetch(API.data);
+  state = await res.json();
+  render();
+}
+
+async function addAmount(ml) {
+  await fetch(API.add, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount_ml: ml }),
+  });
+  await fetchData();
+}
+
+async function deleteEntry(id) {
+  await fetch(API.del, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  await fetchData();
+}
+
+async function setGoal(ml) {
+  await fetch(API.goal, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ goal_ml: ml }),
+  });
+  await fetchData();
+}
+
+function render() {
+  const today = todayStr();
+  const todayEntries = state.entries.filter(e => e.date === today);
+  const totalMl = todayEntries.reduce((s, e) => s + e.amount_ml, 0);
+
+  document.getElementById('total-value').textContent = formatL(totalMl);
+  document.getElementById('goal-value').textContent = formatL(state.goal_ml);
+  const pct = Math.min(100, Math.round((totalMl / state.goal_ml) * 100));
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const list = document.getElementById('today-entries');
+  list.innerHTML = '';
+  if (todayEntries.length === 0) {
+    list.innerHTML = '<div class="empty-note">Rien enregistré pour l’instant.</div>';
+  } else {
+    todayEntries.slice().reverse().forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'entry-row';
+      row.innerHTML = `
+        <span class="time">${e.time}</span>
+        <span class="qty">${e.amount_ml} ml</span>
+        <button data-id="${e.id}" title="Supprimer">✕</button>
+      `;
+      row.querySelector('button').addEventListener('click', () => deleteEntry(e.id));
+      list.appendChild(row);
+    });
+  }
+
+  renderStats();
+}
+
+function renderStats() {
+  const totals = {};
+  state.entries.forEach(e => {
+    totals[e.date] = (totals[e.date] || 0) + e.amount_ml;
+  });
+  const days = Object.keys(totals).sort();
+
+  // Moyenne
+  const avg = days.length ? days.reduce((s, d) => s + totals[d], 0) / days.length : 0;
+  document.getElementById('stat-avg').textContent = formatL(avg) + ' L';
+
+  // Streak d'objectif atteint
+  const hitDays = days.filter(d => totals[d] >= state.goal_ml).length;
+  document.getElementById('stat-streak').textContent = hitDays;
+
+  // Graphique des 7 derniers jours
+  const barsEl = document.getElementById('bars');
+  barsEl.innerHTML = '';
+  const last7 = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    last7.push(d.toISOString().slice(0, 10));
+  }
+  const maxVal = Math.max(state.goal_ml, ...last7.map(d => totals[d] || 0));
+  last7.forEach(d => {
+    const val = totals[d] || 0;
+    const heightPct = maxVal ? Math.max(2, (val / maxVal) * 100) : 2;
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    const dayLabel = new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short' });
+    col.innerHTML = `
+      <div class="bar ${val >= state.goal_ml ? 'hit-goal' : ''}" style="height:${heightPct}%" title="${formatL(val)} L"></div>
+      <div class="day-label">${dayLabel}</div>
+    `;
+    barsEl.appendChild(col);
+  });
+
+  // Historique complet
+  const historyEl = document.getElementById('history-rows');
+  historyEl.innerHTML = '';
+  if (days.length === 0) {
+    historyEl.innerHTML = '<div class="empty-note">Aucune donnée pour le moment.</div>';
+  } else {
+    days.slice().reverse().forEach(d => {
+      const val = totals[d];
+      const row = document.createElement('div');
+      row.className = 'history-row';
+      const dateLabel = new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      row.innerHTML = `
+        <span class="date">${dateLabel}</span>
+        <span class="total ${val >= state.goal_ml ? 'hit' : ''}">${formatL(val)} L</span>
+      `;
+      historyEl.appendChild(row);
+    });
+  }
+}
+
+// --- Interactions ---------------------------------------------------------
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+  });
+});
+
+document.querySelectorAll('.btn[data-amount]').forEach(btn => {
+  btn.addEventListener('click', () => addAmount(parseInt(btn.dataset.amount, 10)));
+});
+
+const modal = document.getElementById('modal-overlay');
+document.getElementById('btn-custom').addEventListener('click', () => {
+  modal.classList.add('active');
+  document.getElementById('custom-input').value = '';
+  document.getElementById('custom-input').focus();
+});
+document.getElementById('custom-cancel').addEventListener('click', () => {
+  modal.classList.remove('active');
+});
+document.getElementById('custom-confirm').addEventListener('click', () => {
+  const cl = parseFloat(document.getElementById('custom-input').value);
+  if (cl > 0) {
+    addAmount(Math.round(cl * 10));
+    modal.classList.remove('active');
+  }
+});
+document.getElementById('custom-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('custom-confirm').click();
+});
+modal.addEventListener('click', e => {
+  if (e.target === modal) modal.classList.remove('active');
+});
+
+document.getElementById('goal-save').addEventListener('click', () => {
+  const val = parseFloat(document.getElementById('goal-input').value);
+  if (val > 0) setGoal(Math.round(val * 1000));
+});
+
+fetchData();
+</script>
+
+</body>
+</html>
