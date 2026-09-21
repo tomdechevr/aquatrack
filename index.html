@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AquaTrack — Suivi d'hydratation</title>
+<title>AquaTrack — Water Tracker</title>
 <style>
   :root {
     --bg: #F5F3EE;
@@ -182,7 +182,7 @@
     font-weight: 600;
   }
 
-  /* --- Historique du jour ------------------------------------------------ */
+  /* --- Today's log --- */
 
   .today-log {
     background: var(--bg-panel);
@@ -443,75 +443,75 @@
   <header class="top">
     <h1>💧 AquaTrack</h1>
     <div class="tabs">
-      <button class="tab active" data-view="today">Aujourd'hui</button>
-      <button class="tab" data-view="stats">Statistiques</button>
+      <button class="tab active" data-view="today">Today</button>
+      <button class="tab" data-view="stats">Statistics</button>
     </div>
   </header>
 
-  <!-- Vue Aujourd'hui -->
+  <!-- Today view -->
   <section id="view-today" class="view active">
     <div class="hero">
-      <div class="label">Bu aujourd'hui</div>
+      <div class="label">Drunk today</div>
       <div class="total"><span id="total-value">0</span><span class="unit">L</span></div>
       <div class="progress-track">
         <div class="progress-fill" id="progress-fill" style="width:0%"></div>
       </div>
-      <div class="goal-line">Objectif : <span id="goal-value">2.0</span> L</div>
+      <div class="goal-line">Goal: <span id="goal-value">2.0</span> L</div>
       <div class="goal-editor">
         <input type="number" id="goal-input" min="0.1" step="0.1" placeholder="2.0">
-        <button id="goal-save">Définir</button>
+        <button id="goal-save">Set</button>
       </div>
     </div>
 
     <div class="buttons">
       <button class="btn" data-amount="200">
         <span class="icon">🥃</span>
-        <span class="name">Un verre</span>
-        <span class="amount">+20 cl</span>
+        <span class="name">A glass</span>
+        <span class="amount">+200 ml</span>
       </button>
       <button class="btn" data-amount="500">
         <span class="icon">🍶</span>
-        <span class="name">Petite bouteille</span>
-        <span class="amount">+50 cl</span>
+        <span class="name">Small bottle</span>
+        <span class="amount">+500 ml</span>
       </button>
       <button class="btn" data-amount="1000">
         <span class="icon">🫙</span>
-        <span class="name">Un litre</span>
+        <span class="name">A liter</span>
         <span class="amount">+1 L</span>
       </button>
       <button class="btn" id="btn-custom">
         <span class="icon">✏️</span>
         <span class="name">Custom</span>
-        <span class="amount">Quantité libre</span>
+        <span class="amount">Set your own amount</span>
       </button>
     </div>
 
     <div class="today-log">
-      <h2>Historique du jour</h2>
+      <h2>Today's log</h2>
       <div id="today-entries"></div>
     </div>
   </section>
 
-  <!-- Vue Statistiques -->
+  <!-- Stats view -->
   <section id="view-stats" class="view">
     <div class="stats-summary">
       <div class="stat-card">
         <div class="value" id="stat-avg">0 L</div>
-        <div class="label">Moyenne / jour</div>
+        <div class="label">Average / day</div>
       </div>
       <div class="stat-card">
         <div class="value" id="stat-streak">0</div>
-        <div class="label">Jours d'objectif atteint</div>
+        <div class="label">Days goal reached</div>
       </div>
     </div>
 
     <div class="chart-panel">
-      <h2>7 derniers jours</h2>
+      <h2>Last 7 days</h2>
       <div class="bars" id="bars"></div>
     </div>
 
     <div class="history-list">
-      <h2>Historique complet</h2>
+      <h2>Full history</h2>
       <div id="history-rows"></div>
     </div>
   </section>
@@ -520,11 +520,11 @@
 <!-- Modale custom -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
-    <h3>Quantité personnalisée</h3>
-    <input type="number" id="custom-input" placeholder="Quantité en cl" min="1">
+    <h3>Custom amount</h3>
+    <input type="number" id="custom-input" placeholder="Amount in cl" min="1">
     <div class="modal-actions">
-      <button id="custom-cancel">Annuler</button>
-      <button class="confirm" id="custom-confirm">Ajouter</button>
+      <button id="custom-cancel">Cancel</button>
+      <button class="confirm" id="custom-confirm">Add</button>
     </div>
   </div>
 </div>
@@ -595,7 +595,7 @@ function render() {
   const list = document.getElementById('today-entries');
   list.innerHTML = '';
   if (todayEntries.length === 0) {
-    list.innerHTML = '<div class="empty-note">Rien enregistré pour l’instant.</div>';
+    list.innerHTML = '<div class="empty-note">Nothing logged yet.</div>';
   } else {
     todayEntries.slice().reverse().forEach(e => {
       const row = document.createElement('div');
@@ -603,7 +603,7 @@ function render() {
       row.innerHTML = `
         <span class="time">${e.time}</span>
         <span class="qty">${e.amount_ml} ml</span>
-        <button data-id="${e.id}" title="Supprimer">✕</button>
+        <button data-id="${e.id}" title="Delete">✕</button>
       `;
       row.querySelector('button').addEventListener('click', () => deleteEntry(e.id));
       list.appendChild(row);
@@ -628,7 +628,7 @@ function renderStats() {
   const hitDays = days.filter(d => totals[d] >= state.goal_ml).length;
   document.getElementById('stat-streak').textContent = hitDays;
 
-  // Graphique des 7 derniers jours
+  // Last 7 days chart
   const barsEl = document.getElementById('bars');
   barsEl.innerHTML = '';
   const last7 = [];
@@ -643,7 +643,7 @@ function renderStats() {
     const heightPct = maxVal ? Math.max(2, (val / maxVal) * 100) : 2;
     const col = document.createElement('div');
     col.className = 'bar-col';
-    const dayLabel = new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'short' });
+    const dayLabel = new Date(d + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' });
     col.innerHTML = `
       <div class="bar ${val >= state.goal_ml ? 'hit-goal' : ''}" style="height:${heightPct}%" title="${formatL(val)} L"></div>
       <div class="day-label">${dayLabel}</div>
@@ -655,13 +655,13 @@ function renderStats() {
   const historyEl = document.getElementById('history-rows');
   historyEl.innerHTML = '';
   if (days.length === 0) {
-    historyEl.innerHTML = '<div class="empty-note">Aucune donnée pour le moment.</div>';
+    historyEl.innerHTML = '<div class="empty-note">No data yet.</div>';
   } else {
     days.slice().reverse().forEach(d => {
       const val = totals[d];
       const row = document.createElement('div');
       row.className = 'history-row';
-      const dateLabel = new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dateLabel = new Date(d + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
       row.innerHTML = `
         <span class="date">${dateLabel}</span>
         <span class="total ${val >= state.goal_ml ? 'hit' : ''}">${formatL(val)} L</span>
